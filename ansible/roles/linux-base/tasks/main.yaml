@@ -1,0 +1,79 @@
+---
+- name: Create my user - {{ my_user }}
+  user:
+    name: "{{ my_user }}"
+    state: present
+    groups: sudo
+    append: yes
+    shell: /bin/bash
+    password: "{{ my_password }}"
+
+- name: Ensure the .ssh directory exists for {{ my_user }}
+  file:
+    path: /home/{{ my_user }}/.ssh
+    state: directory
+    mode: '0700'
+    owner: "{{ my_user }}"
+    group: "{{ my_user }}"
+
+- name: Fetch SSH keys from GitHub for {{ my_user }}
+  get_url:
+    url: "{{ ssh_key_url }}"
+    dest: /home/{{ my_user }}/.ssh/authorized_keys
+    mode: '0600'
+    owner: "{{ my_user }}"
+    group: "{{ my_user }}"
+
+# If you don't set this first it will be a bad day ... as you will not know the password
+- name: Allow {{ ansible_user }} user to have passwordless sudo
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^{{ ansible_user }} ALL=\(ALL\) NOPASSWD: ALL'
+    line: '{{ ansible_user }} ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Create ansible user - {{ ansible_user }}
+  user:
+    name: "{{ ansible_user }}"
+    state: present
+    groups: sudo
+    append: yes
+    password: '*'
+
+
+- name: Ensure the .ssh directory exists for ansible user
+  file:
+    path: /home/{{ ansible_user }}/.ssh
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Fetch SSH keys from GitHub for ansible
+  get_url:
+    url: "{{ ssh_key_url }}"
+    dest: /home/ansible/.ssh/authorized_keys
+    mode: '0600'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - open-vm-tools
+    - cron
+    - ntp
+    - ca-certificates
+    - curl
+    - vim
+
+- name: Setup apt updater cron job
+  cron:
+    name: "apt update"
+    job: "apt-get update && apt-get upgrade -y"
+    minute: "0"
+    hour: "2"

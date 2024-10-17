@@ -1,0 +1,5 @@
+- name: Setup controller nodes
+  hosts: all
+  become: true
+  roles:
+    - linux-base

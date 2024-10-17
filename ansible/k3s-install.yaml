@@ -1,0 +1,3 @@
+---
+- name: run k3s-ansible site playbook
+  import_playbook: "/Users/jfield/.ansible/collections/ansible_collections/techno_tim/k3s_ansible/site.yml"
