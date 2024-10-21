@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: onepassword-connect
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Do after namespace
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  project: default
+  source:
+    chart: connect
+    repoURL: https://raw.githubusercontent.com/1Password/connect-helm-charts/gh-pages
+    targetRevision: 1.16.0
+    helm:
+      releaseName: connect
+      parameters:
+        - name: "connect.replicas"
+          value: "2"
+        - name: "connect.serviceType"
+          value: ClusterIP
+        - name: "connect.credentialsName"
+          value: onepassword-connect-credentials
+        - name: "connect.api.httpsPort"
+          value: "4443"
+        - name: "connect.api.httpPort"
+          value: "8080"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: onepassword

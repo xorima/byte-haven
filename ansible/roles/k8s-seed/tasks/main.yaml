@@ -61,7 +61,7 @@
     release_namespace: argocd
     chart_version: "7.6.12"
     create_namespace: true
-  # when: secret_facts.resources | length == 0
+  when: secret_facts.resources | length == 0
 
 - name: Create ArgoCD Application for base
   kubernetes.core.k8s:
