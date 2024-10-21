@@ -1,0 +1,7 @@
+- name: Seed the cluster
+  hosts: "{{ groups['master'][0] }}"
+  vars:
+    ansible_python_interpreter: "/opt/ansible/bin/python"
+  become: false
+  roles:
+    - k8s-seed

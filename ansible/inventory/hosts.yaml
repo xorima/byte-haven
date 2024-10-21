@@ -23,3 +23,6 @@ all:
               ansible_host: 192.168.30.71
             sg-worker2:
               ansible_host: 192.168.30.72
+localhost:
+  vars:
+    ansible_python_interpreter: /usr/bin/env python3

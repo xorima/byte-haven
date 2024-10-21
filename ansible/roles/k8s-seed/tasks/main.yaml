@@ -1,0 +1,44 @@
+- name: install pre-requisites for k8s ansible in the virtual environment
+  become: true
+  pip:
+    name:
+      - openshift
+      - pyyaml
+      - kubernetes
+
+- name: Check if the onepassword-connect-credentials secret exists
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    namespace: onepassword
+    name: onepassword-connect-credentials
+  register: secret_facts
+
+- name: Read 1Password credentials
+  command: op read "op://sg-k8s/byte-haven-1password-credentials-file/1password-credentials.json"
+  register: op_output
+  delegate_to: localhost
+  when: secret_facts.resources | length == 0
+
+- name: Create the onepassword namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: onepassword
+  when: secret_facts.resources | length == 0
+
+- name: Create onepassword-connect-credentials secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: onepassword-connect-credentials
+        namespace: onepassword
+      data:
+        1password-credentials.json: "{{ op_output.stdout | b64encode }}"
+  when: secret_facts.resources | length == 0

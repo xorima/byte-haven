@@ -70,6 +70,10 @@
     - ca-certificates
     - curl
     - vim
+    - python3-pip
+    - python3-full
+    - python3-venv
+    - pipx
 
 - name: Setup apt updater cron job
   cron:
@@ -77,3 +81,8 @@
     job: "apt-get update && apt-get upgrade -y"
     minute: "0"
     hour: "2"
+
+- name: Create a Python virtual environment
+  command: python3 -m venv /opt/ansible --system-site-packages
+  args:
+    creates: /opt/ansible
