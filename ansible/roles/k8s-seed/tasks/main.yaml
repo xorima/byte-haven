@@ -1,3 +1,9 @@
+- name: Install "helm" cli
+  become: true
+  community.general.snap:
+    name: helm
+    classic: true
+
 - name: install pre-requisites for k8s ansible in the virtual environment
   become: true
   pip:
@@ -42,3 +48,42 @@
       data:
         1password-credentials.json: "{{ op_output.stdout | b64encode }}"
   when: secret_facts.resources | length == 0
+
+- name: Add stable chart repo
+  kubernetes.core.helm_repository:
+    name: argocd
+    repo_url: "https://argoproj.github.io/argo-helm"
+
+- name: Deploy ArgoCD using helm
+  kubernetes.core.helm:
+    name: argocd
+    chart_ref: argocd/argo-cd
+    release_namespace: argocd
+    chart_version: "7.6.12"
+    create_namespace: true
+  # when: secret_facts.resources | length == 0
+
+- name: Create ArgoCD Application for base
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: argoproj.io/v1alpha1
+      kind: Application
+      metadata:
+        name: base
+        namespace: argocd
+        annotations:
+          argocd.argoproj.io/sync-wave: "1"
+      spec:
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
+        project: default
+        source:
+          repoURL: https://github.com/xorima/byte-haven.git
+          targetRevision: HEAD
+          path: k8s/envs/sg/base
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: argocd

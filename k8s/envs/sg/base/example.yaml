@@ -1,0 +1,5 @@
+# example namespace
+api_version: v1
+type: Namespace
+metadata: 
+  name: example
