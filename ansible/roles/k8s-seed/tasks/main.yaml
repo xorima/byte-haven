@@ -22,7 +22,13 @@
 
 - name: Read 1Password credentials
   command: op read "op://sg-k8s/byte-haven-1password-credentials-file/1password-credentials.json"
-  register: op_output
+  register: op_json
+  delegate_to: localhost
+  when: secret_facts.resources | length == 0
+
+- name: Read 1Password credentials
+  command: op read "op://sg-k8s/byte-haven-1password-token/credential"
+  register: op_token
   delegate_to: localhost
   when: secret_facts.resources | length == 0
 
@@ -46,7 +52,30 @@
         name: onepassword-connect-credentials
         namespace: onepassword
       data:
-        1password-credentials.json: "{{ op_output.stdout | b64encode }}"
+        1password-credentials.json: "{{ op_json.stdout | b64encode | b64encode }}" # for some odd reason we have to do this twice. unsure why still
+  when: secret_facts.resources | length == 0
+
+- name: Create the external-secrets namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: external-secrets
+  when: secret_facts.resources | length == 0
+
+- name: Create onepassword-connect-token secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: onepassword-connect-token
+        namespace: external-secrets
+      data:
+        token: "{{ op_token.stdout | b64encode }}"
   when: secret_facts.resources | length == 0
 
 - name: Add stable chart repo
