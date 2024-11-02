@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Do after namespace
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  project: default
+  source:
+    chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: v1.16.0
+    helm:
+      releaseName: cert-manager
+      parameters:
+        - name: "installCRDs"
+          value: "true"
+        - name: "prometheus.enabled"
+          value: "false"
+        - name: "prometheus.servicemonitor.enabled"
+          value: "false"
+        - name: "webhook.timeoutSeconds"
+          value: "29"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: cert-manager

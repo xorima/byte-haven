@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-app
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  project: default
+  source:
+    repoURL: https://github.com/xorima/byte-haven.git
+    targetRevision: HEAD
+    path: k8s/envs/sg/core-infra/monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
