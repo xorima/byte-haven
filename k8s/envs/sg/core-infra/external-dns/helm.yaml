@@ -14,7 +14,7 @@ spec:
   source:
     chart: external-dns
     repoURL: registry-1.docker.io/bitnamicharts/
-    targetRevision: v1.16.0
+    targetRevision: 8.3.12
     helm:
       releaseName: external-dns
       parameters:
