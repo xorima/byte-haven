@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stakater
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Do after namespace
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  project: default
+  source:
+    chart: reloader
+    repoURL: https://stakater.github.io/stakater-charts
+    targetRevision: 1.1.0
+    helm:
+      version: v3
+      releaseName: stakater
+      values: |
+        reloader:
+          watchGlobally: true
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: utilities
+
+
