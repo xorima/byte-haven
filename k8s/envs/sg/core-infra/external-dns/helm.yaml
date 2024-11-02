@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Do after namespace
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  project: default
+  source:
+    chart: external-dns
+    repoURL: registry-1.docker.io/bitnamicharts/
+    targetRevision: v1.16.0
+    helm:
+      releaseName: external-dns
+      parameters:
+        - name: "cloudflare.apiKey"
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare
+              key: token
+        - name: "cloudflare.email"
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare
+              key: email
+        - name: "cloudflare.proxied"
+          value: "true"
+        - name: "metrics.enabled"
+          value: "true"
+        - name: "metrics.serviceMonitor.enabled"
+          value: "false"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: external-dns
