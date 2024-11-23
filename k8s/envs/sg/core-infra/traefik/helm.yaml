@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Do after namespace
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  project: default
+  source:
+    chart: traefik
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 32.1.0
+    helm:
+      version: v3
+      releaseName: traefik
+      values: |
+        metrics:
+          prometheus:
+            service:
+              enabled: false
+            serviceMonitor:
+              honorTimestamps: true
+        service:
+          enabled: true
+          single: true
+          type: LoadBalancer
+          annotations: 
+            service.beta.kubernetes.io/do-loadbalancer-name: traefik
+        deployment:
+          replicas: 2
+        providers:
+          kubernetesIngress:
+            enabled: true
+            allowExternalNameServices: false
+            allowEmptyServices: false
+            namespaces: []
+            publishedService:
+              enabled: true
+        globalArguments:
+          - "--global.checknewversion"
+        ports:
+          websecure:
+            port: 8443
+            expose: 
+              default: true
+            exposedPort: 443
+            protocol: TCP
+            http3:
+              enabled: false
+            tls:
+              enabled: true
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: traefik
+
+
