@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: metric-server-cleanup
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      serviceAccountName: metric-server-cleanup-sa
+      containers:
+        - name: busybox
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              if kubectl get deployment metrics-server -n kube-system; then
+                kubectl delete deployment metrics-server -n kube-system
+              else
+                echo "Deployment metrics-server not found in kube-system namespace"
+              fi
+      restartPolicy: Never

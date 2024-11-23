@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metric-server-cleanup-sa
+  namespace: kube-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: metric-server-cleanup-role
+  namespace: kube-system
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["metric-server"]
+    verbs: ["get", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: busybox-rolebinding
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: metric-server-cleanup-sa
+    namespace: kube-system
+roleRef:
+  kind: Role
+  name: metric-server-cleanup-role
+  apiGroup: rbac.authorization.k8s.io
